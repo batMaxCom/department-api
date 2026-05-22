@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from department.application.common.application_error import ApplicationError, ApplicationTypeError
 from department.domain.department.entity import Department
 from department.domain.department.repository import DepartmentRepository
+from department.domain.department.value_objects import DepartmentId
 from department.infrastructure.persistence.adapters.common.mixins import FilterMixin
 from department.infrastructure.persistence.tables import DEPARTMENT_TABLE
 from department.application.common.const import errors as error_texts
@@ -36,6 +37,12 @@ class DepartmentRepositoryImpl(DepartmentRepository, FilterMixin):
             )
         return departments
 
+    async def get_children_ids(self, parent_id: DepartmentId) -> list[DepartmentId]:
+        stmt = select(DEPARTMENT_TABLE.c.id).where(
+            DEPARTMENT_TABLE.c.parent_id == parent_id
+        )
+        result = await self.__session.execute(stmt)
+        return [DepartmentId(row[0]) for row in result.all()]
 
     async def delete(self, entity: Department) -> None:
         await self.__session.delete(entity)

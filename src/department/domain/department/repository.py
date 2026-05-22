@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from department.domain.department.entity import Department
+from department.domain.department.value_objects import DepartmentId
 
 
 class DepartmentRepository(ABC):
@@ -21,3 +22,7 @@ class DepartmentRepository(ABC):
     @abstractmethod
     async def delete(self, entity: Department) -> None:
         """Delete a department."""
+
+    @abstractmethod
+    async def get_children_ids(self, parent_id: DepartmentId) -> list[DepartmentId]:
+        """Get IDs of direct child departments."""

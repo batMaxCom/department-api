@@ -71,8 +71,8 @@ async def get_department(
 @inject
 async def update_department(
     department_id: int,
-    name: Annotated[str | None, Body(embed=True)],
-    parent_id: Annotated[int | None, Body(embed=True)],
+    name: Annotated[str | None, Body(embed=True)] = None,
+    parent_id: Annotated[int | None, Body(embed=True)] = None,
     *,
     mediatr: FromDishka[MediatR]
 ) -> DepartmentDto:
@@ -92,8 +92,8 @@ async def update_department(
 @inject
 async def delete_department(
     department_id: int,
-    mode: Annotated[Literal["cascade", "reassign"], Body(embed=True)],
-    reassign_to_department_id: Annotated[int, Body(embed=True)],
+    mode: Annotated[Literal["cascade", "reassign"], Query()],
+    reassign_to_department_id: Annotated[int | None, Query()] = None,
     *,
     mediatr: FromDishka[MediatR],
 ) -> None:
