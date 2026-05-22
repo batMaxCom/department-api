@@ -7,16 +7,16 @@ from department.domain.department.entity import Department
 
 @dataclass(slots=True)
 class DepartmentDto:
-    id: int
+    id: str
     name: str
-    parent_id: int | None
+    parent_id: str | None
 
     @classmethod
     def from_entity(cls, entity: Department) -> Self:
         return cls(
-            id=entity.entity_id,
+            id=entity.entity_id.__str__(),
             name=entity.name_vo.value,
-            parent_id=entity.parent_id
+            parent_id=entity.parent_id.__str__()
         )
 
 @dataclass(slots=True)

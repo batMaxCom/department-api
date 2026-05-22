@@ -8,7 +8,6 @@ from department.domain.employee.const import errors as error_text
 from department.domain.employee.const.validation import position as validation
 
 
-
 @dataclass(frozen=True, slots=True)
 class Position(ValueObject):
     value: str

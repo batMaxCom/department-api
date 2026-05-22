@@ -31,7 +31,7 @@ class Employee(Entity[EmployeeId]):
         return self._full_name
 
     @property
-    def position(self) -> Position:
+    def position_vo(self) -> Position:
         return self._position
 
     @property

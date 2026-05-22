@@ -8,7 +8,6 @@ from department.domain.department.const import errors as error_text
 from department.domain.department.const import validation
 
 
-
 @dataclass(frozen=True, slots=True)
 class DepartmentName(ValueObject):
     value: str

@@ -2,8 +2,7 @@ from sqlalchemy import BIGINT, Column, Table, String, DateTime, ForeignKey, Date
 from sqlalchemy.orm import composite
 
 from department.domain.employee.entity import Employee
-from department.domain.employee.value_object.employee_name import EmployeeName
-from department.domain.employee.value_object.position import Position
+from department.domain.employee.value_object import EmployeeName, Position
 from department.infrastructure.persistence.tables.base import MAPPER_REGISTRY
 
 EMPLOYEE_TABLE = Table(
@@ -14,7 +13,7 @@ EMPLOYEE_TABLE = Table(
     Column("full_name", String, nullable=False),
     Column("position", String, nullable=False),
     Column("hired_at", Date, nullable=False),
-    Column("created_at", DateTime, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
 )
 
 def map_employee_table() -> None:
