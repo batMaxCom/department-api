@@ -1,0 +1,44 @@
+services:
+
+  department.api:
+    container_name: department-api
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: .env
+    command: ["sh", "-c", "department-cli migrate && department-cli start-uvicorn"]
+    restart: unless-stopped
+    depends_on:
+      department.db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:80/healthcheck || exit 1" ]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${SERVER_EXTERNAL_PORT}:${SERVER_PORT}"
+
+  department.db:
+    container_name: department-db
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+    restart: unless-stopped
+    volumes:
+      - pg_data:/data/postgres
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:

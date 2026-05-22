@@ -12,7 +12,7 @@ from department.entrypoint.di.containers import web_container
 from department.entrypoint.web.config import AppConfig, get_web_config
 from department.infrastructure.persistence.tables import setup_mapping
 from department import version
-from department.presentation.controllers.department import DEPARTMENT_ROUTER
+from department.presentation.controllers import DEPARTMENT_ROUTER, HEALTHCHECK_CONTROLLER
 from department.presentation.exceptions.setup import (
     setup_application_error_handler,
     setup_domain_error_handler,
@@ -78,6 +78,7 @@ def setup_middleware(application: FastAPI, config: AppConfig) -> None:
 
 def setup_controllers(application: FastAPI) -> None:
     application.include_router(DEPARTMENT_ROUTER, prefix="/api")
+    application.include_router(HEALTHCHECK_CONTROLLER)
 
 def app_factory() -> FastAPI:
     config = get_web_config()
