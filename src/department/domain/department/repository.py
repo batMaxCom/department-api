@@ -26,3 +26,7 @@ class DepartmentRepository(ABC):
     @abstractmethod
     async def get_children_ids(self, parent_id: DepartmentId) -> list[DepartmentId]:
         """Get IDs of direct child departments."""
+
+    @abstractmethod
+    async def exists(self, **filters: Any) -> bool:
+        """Check if a department exists."""

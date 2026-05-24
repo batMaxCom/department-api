@@ -12,6 +12,12 @@ from department.domain.department.const import validation
 class DepartmentName(ValueObject):
     value: str
 
+    def __post_init__(self) -> None:
+        if isinstance(self.value, str):
+            object.__setattr__(self, "value", self.value.strip())
+
+        self._validate()
+
     def _validate(self) -> None:
         if self.value is None:
             raise DomainError(type=DomainTypeError.VALIDATION, message=error_text.EMPTY_DEPARTMENT_NAME)

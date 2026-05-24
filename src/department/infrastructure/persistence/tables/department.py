@@ -1,4 +1,4 @@
-from sqlalchemy import BIGINT, Column, Table, String, DateTime, ForeignKey
+from sqlalchemy import BIGINT, Column, Table, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import composite
 
 from department.domain.department.entity import Department
@@ -12,6 +12,12 @@ DEPARTMENT_TABLE = Table(
     Column("name", String, nullable=False),
     Column("parent_id", BIGINT, ForeignKey("departments.id"), nullable=True, index=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
+
+    UniqueConstraint(
+        "parent_id",
+        "name",
+        name="uq_department_parent_name"
+    )
 )
 
 def map_department_table() -> None:

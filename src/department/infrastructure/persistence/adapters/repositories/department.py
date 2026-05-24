@@ -46,3 +46,9 @@ class DepartmentRepositoryImpl(DepartmentRepository, FilterMixin):
 
     async def delete(self, entity: Department) -> None:
         await self.__session.delete(entity)
+
+    async def exists(self, **filters: Any) -> bool:
+        stmt = select(Department)
+        stmt = self._add_filters(DEPARTMENT_TABLE, stmt, **filters)
+        result = await self.__session.execute(stmt.limit(1))
+        return result.scalar_one_or_none() is not None
