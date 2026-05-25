@@ -10,6 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from department.entrypoint.di.containers import web_container
 from department.entrypoint.web.config import AppConfig, get_web_config
+from department.infrastructure.adapters.logger import setup_logging
 from department.infrastructure.persistence.tables import setup_mapping
 from department import version
 from department.presentation.controllers import DEPARTMENT_ROUTER, HEALTHCHECK_CONTROLLER
@@ -82,6 +83,7 @@ def setup_controllers(application: FastAPI) -> None:
 
 def app_factory() -> FastAPI:
     config = get_web_config()
+    setup_logging(debug=config.app_config.debug)
     container = web_container(
         app_config=config.app_config,
         db_config=config.db_config,

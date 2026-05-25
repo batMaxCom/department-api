@@ -1,19 +1,13 @@
-from typing import cast, NewType
+from dishka import Provider, Scope, provide
+from structlog import get_logger
 
-import structlog
-from dishka import Provider, Scope, alias, provide
-from structlog.stdlib import BoundLogger
-
-from department.application.ports import Logger
-
-CQRSLogger = NewType("CQRSLogger", Logger)
+from department.application.ports.logger import Logger
+from department.infrastructure.adapters.logger import StructlogLogger
 
 
 class LoggerAdapterProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def bound_logger(self) -> BoundLogger:
-        return cast(BoundLogger, structlog.get_logger())
-
-    logger = alias(source=BoundLogger, provides=Logger)
+    def provide_logger(self) -> Logger:
+        return StructlogLogger(get_logger("application"))
