@@ -1,3 +1,4 @@
+from .logger import Logger
 from .time_provider import TimeProvider
 from .transaction_manager import (
     AsyncTransactionManager,
@@ -11,4 +12,5 @@ __all__ = (
     "TimeProvider",
     "AsyncTransactionManager",
     "SyncTransactionManager",
+    "Logger",
 )

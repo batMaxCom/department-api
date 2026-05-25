@@ -8,6 +8,7 @@ from department.entrypoint.di.providers.web import (
     ApplicationAdaptersProvider,
     FastapiProvider,
     HandlersProvider,
+    LoggerAdapterProvider,
 )
 from department.entrypoint.web.config import AppConfig, PostgresConfig
 
@@ -24,6 +25,7 @@ def web_container(
         ApplicationAdaptersProvider(),
         FastapiProvider(),
         HandlersProvider(),
+        LoggerAdapterProvider(),
         context={
             AppConfig: app_config,
             PostgresConfig: db_config,

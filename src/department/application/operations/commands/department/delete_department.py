@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from department.application.common.application_error import ApplicationError, ApplicationTypeError
 from department.application.ports.cqrs import CommandHandler, Command
-from department.application.ports import AsyncTransactionManager
+from department.application.ports import AsyncTransactionManager, Logger
 from department.domain.department.repository import DepartmentRepository
 from department.domain.department.value_objects import DepartmentId
 from department.domain.employee.repository import EmployeeRepository
@@ -24,16 +24,22 @@ class DeleteDepartmentCommandHandler(
         department_repository: DepartmentRepository,
         employee_repository: EmployeeRepository,
         transaction_manager: AsyncTransactionManager,
+        logger: Logger,
     ) -> None:
         self.__department_repository = department_repository
         self.__employee_repository = employee_repository
         self.__transaction_manager = transaction_manager
+        self.__logger = logger
 
     async def handle(self, command: DeleteDepartmentCommand) -> None:
         department_id = DepartmentId(command.department_id)
 
         if command.mode == "cascade":
             await self._cascade_delete(department_id)
+            await self.__logger.ainfo(
+                "Department cascade deleted",
+                department_id=command.department_id,
+            )
         elif command.mode == "reassign":
             if command.reassign_to_department_id is None:
                 raise ApplicationError(
@@ -54,6 +60,11 @@ class DeleteDepartmentCommandHandler(
             await self._reassign_delete(
                 department_id=department_id,
                 target_id=target_id,
+            )
+            await self.__logger.ainfo(
+                "Department reassign deleted",
+                department_id=command.department_id,
+                reassign_to=command.reassign_to_department_id,
             )
 
         else:

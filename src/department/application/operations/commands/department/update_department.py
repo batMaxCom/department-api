@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from department.application.common.application_error import ApplicationError, ApplicationTypeError
 from department.application.common.dto import DepartmentDto
 from department.application.ports.cqrs import CommandHandler, Command
-from department.application.ports import AsyncTransactionManager
+from department.application.ports import AsyncTransactionManager, Logger
 from department.domain.department.repository import DepartmentRepository
 from department.domain.department.value_objects import DepartmentId, DepartmentName
 from department.application.common.const import errors as error_texts
@@ -19,11 +19,12 @@ class UpdateDepartmentCommandHandler(CommandHandler[UpdateDepartmentCommand, Dep
     def __init__(
         self,
         department_repository: DepartmentRepository,
-        transaction_manager: AsyncTransactionManager
-
+        transaction_manager: AsyncTransactionManager,
+        logger: Logger,
     ) -> None:
         self.__department_repository = department_repository
         self.__transaction_manager = transaction_manager
+        self.__logger = logger
 
     async def handle(self, command: UpdateDepartmentCommand) -> DepartmentDto:
         department_id = DepartmentId(command.department_id)
@@ -44,6 +45,13 @@ class UpdateDepartmentCommandHandler(CommandHandler[UpdateDepartmentCommand, Dep
 
         await self.__department_repository.update(department)
         await self.__transaction_manager.commit()
+
+        await self.__logger.ainfo(
+            "Department updated",
+            department_id=command.department_id,
+            name=command.name,
+            parent_id=command.parent_id,
+        )
         return DepartmentDto.from_entity(department)
 
     async def __validate_parent(

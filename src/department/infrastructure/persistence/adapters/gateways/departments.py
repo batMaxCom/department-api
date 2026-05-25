@@ -7,6 +7,7 @@ from department.application.common.application_error import (
 )
 from department.application.common.dto import DepartmentDetailsDto, DepartmentDto, EmployeeDto
 from department.application.ports.gateways.department import DepartmentGateway
+from department.application.ports import Logger
 from department.domain.department.entity import Department
 from department.domain.department.value_objects import DepartmentId
 from department.domain.employee.entity import Employee
@@ -19,8 +20,10 @@ class DepartmentGatewayImpl(DepartmentGateway):
     def __init__(
         self,
         session: AsyncSession,
+        logger: Logger,
     ) -> None:
         self._session = session
+        self._logger = logger
 
     async def get_details(
         self,
@@ -31,6 +34,10 @@ class DepartmentGatewayImpl(DepartmentGateway):
 
         department = await self._load_department(department_id)
         if department is None:
+            await self._logger.awarning(
+                "Department not found",
+                department_id=department_id,
+            )
             raise ApplicationError(
                 type=ApplicationTypeError.NOT_FOUND,
                 message=error_texts.DEPARTMENT_NOT_FOUND

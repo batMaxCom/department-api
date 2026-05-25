@@ -4,7 +4,7 @@ from department.application.common.application_error import ApplicationError, Ap
 from department.application.common.dto import DepartmentDto
 from department.application.ports.cqrs import CommandHandler, Command
 
-from department.application.ports import IntegerIdGenerator, TimeProvider, AsyncTransactionManager
+from department.application.ports import IntegerIdGenerator, TimeProvider, AsyncTransactionManager, Logger
 from department.domain.department.entity import Department
 from department.domain.department.repository import DepartmentRepository
 from department.domain.department.value_objects import DepartmentId, DepartmentName
@@ -23,13 +23,14 @@ class CreateDepartmentCommandHandler(CommandHandler[CreateDepartmentCommand, Dep
         integer_id_generator: IntegerIdGenerator,
         department_repository: DepartmentRepository,
         time_provider: TimeProvider,
-        transaction_manager: AsyncTransactionManager
+        transaction_manager: AsyncTransactionManager,
+        logger: Logger,
     ) -> None:
         self.__integer_id_generator = integer_id_generator
         self.__department_repository = department_repository
         self.__time_provider = time_provider
         self.__transaction_manager = transaction_manager
-
+        self.__logger = logger
 
     async def handle(self, command: CreateDepartmentCommand) -> DepartmentDto:
         if command.parent_id and await self.__department_repository.exists(
@@ -41,7 +42,6 @@ class CreateDepartmentCommandHandler(CommandHandler[CreateDepartmentCommand, Dep
                 message=error_texts.DEPARTMENTS_EXIST
             )
 
-
         department = Department(
             department_id=DepartmentId(await self.__integer_id_generator.next_id()),
             name=DepartmentName(command.name),
@@ -50,4 +50,11 @@ class CreateDepartmentCommandHandler(CommandHandler[CreateDepartmentCommand, Dep
         )
         await self.__department_repository.add(department)
         await self.__transaction_manager.commit()
+
+        await self.__logger.ainfo(
+            "Department created",
+            department_id=str(department.entity_id),
+            name=command.name,
+            parent_id=command.parent_id,
+        )
         return DepartmentDto.from_entity(department)

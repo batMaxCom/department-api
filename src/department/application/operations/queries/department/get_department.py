@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from department.application.common.dto.department import DepartmentDetailsDto
 from department.application.ports.cqrs import QueryHandler, Query
 from department.application.ports.gateways import DepartmentGateway
+from department.application.ports import Logger
 from department.domain.common.domain_errors import DomainError, DomainTypeError
 from department.domain.department.value_objects import DepartmentId
 
@@ -27,10 +28,21 @@ class GetDepartmentQuery(Query[DepartmentDetailsDto]):
 
 
 class GetDepartmentQueryHandler(QueryHandler[GetDepartmentQuery, DepartmentDetailsDto]):
-    def __init__(self, department_gateway: DepartmentGateway) -> None:
+    def __init__(
+        self,
+        department_gateway: DepartmentGateway,
+        logger: Logger,
+    ) -> None:
         self.__department_gateway = department_gateway
+        self.__logger = logger
 
     async def handle(self, query: GetDepartmentQuery) -> DepartmentDetailsDto:
+        await self.__logger.ainfo(
+            "Department requested",
+            department_id=query.department_id,
+            depth=query.depth,
+            include_employees=query.include_employees
+        )
         return await self.__department_gateway.get_details(
             department_id=DepartmentId(query.department_id),
             depth=query.depth,
