@@ -12,7 +12,7 @@ EMPLOYEE_TABLE = Table(
     Column("department_id", BIGINT, ForeignKey("departments.id"), nullable=False, index=True),
     Column("full_name", String, nullable=False),
     Column("position", String, nullable=False),
-    Column("hired_at", Date, nullable=False),
+    Column("hired_at", Date, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
 )
 
