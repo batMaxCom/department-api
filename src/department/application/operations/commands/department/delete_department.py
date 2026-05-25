@@ -68,25 +68,7 @@ class DeleteDepartmentCommandHandler(
         self,
         department_id: DepartmentId,
     ) -> None:
-
-        children_ids = (
-            await self.__department_repository.get_children_ids(
-                department_id
-            )
-        )
-
-        for child_id in children_ids:
-            await self._cascade_delete(
-                child_id
-            )
-
-        await self.__employee_repository.delete_by_department(
-            department_id
-        )
-
-        await self._delete_department(
-            department_id
-        )
+        await self._delete_department(department_id)
 
     async def _reassign_delete(
         self,

@@ -1,8 +1,9 @@
 from sqlalchemy import BIGINT, Column, Table, String, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import composite
+from sqlalchemy.orm import composite, relationship
 
 from department.domain.department.entity import Department
 from department.domain.department.value_objects import DepartmentName
+from department.domain.employee.entity import Employee
 from department.infrastructure.persistence.tables.base import MAPPER_REGISTRY
 
 DEPARTMENT_TABLE = Table(
@@ -29,5 +30,19 @@ def map_department_table() -> None:
             "_name": composite(DepartmentName, DEPARTMENT_TABLE.c.name),
             "_parent_id": DEPARTMENT_TABLE.c.parent_id,
             "_created_at": DEPARTMENT_TABLE.c.created_at,
+            "children": relationship(
+                "Department",
+                cascade="all, delete",
+                back_populates="parent",
+            ),
+            "parent": relationship(
+                "Department",
+                remote_side=[DEPARTMENT_TABLE.c.id],
+                back_populates="children",
+            ),
+            "employees": relationship(
+                Employee,
+                cascade="all, delete-orphan",
+            ),
         }
     )

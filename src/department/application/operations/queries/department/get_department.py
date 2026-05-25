@@ -13,7 +13,6 @@ class GetDepartmentQuery(Query[DepartmentDetailsDto]):
     include_employees: bool
     depth: int = 1
 
-    #ToDo: Следует убрать в value_objects
     def __post_init__(self) -> None:
         if self.depth < 1:
             raise DomainError(
