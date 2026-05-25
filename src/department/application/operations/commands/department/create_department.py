@@ -33,8 +33,8 @@ class CreateDepartmentCommandHandler(CommandHandler[CreateDepartmentCommand, Dep
 
     async def handle(self, command: CreateDepartmentCommand) -> DepartmentDto:
         if command.parent_id and await self.__department_repository.exists(
-            name=DepartmentName(command.name),
-            parent_id=DepartmentId(command.parent_id)
+            name=command.name,
+            parent_id=command.parent_id
         ):
             raise ApplicationError(
                 type=ApplicationTypeError.CONFLICT,

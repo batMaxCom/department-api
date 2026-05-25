@@ -52,3 +52,23 @@ class DepartmentRepositoryImpl(DepartmentRepository, FilterMixin):
         stmt = self._add_filters(DEPARTMENT_TABLE, stmt, **filters)
         result = await self.__session.execute(stmt.limit(1))
         return result.scalar_one_or_none() is not None
+
+    async def is_descendant(
+        self,
+        ancestor_id: DepartmentId,
+        descendant_id: DepartmentId,
+    ) -> bool:
+
+        children = await self.get_children_ids(ancestor_id)
+
+        for child_id in children:
+            if child_id == descendant_id:
+                return True
+
+            if await self.is_descendant(
+                child_id,
+                descendant_id,
+            ):
+                return True
+
+        return False

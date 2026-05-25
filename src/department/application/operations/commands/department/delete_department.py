@@ -16,13 +16,14 @@ class DeleteDepartmentCommand(Command[None]):
     reassign_to_department_id: int | None = None
 
 
-class DeleteDepartmentCommandHandler(CommandHandler[DeleteDepartmentCommand, None]):
+class DeleteDepartmentCommandHandler(
+    CommandHandler[DeleteDepartmentCommand, None]
+):
     def __init__(
         self,
         department_repository: DepartmentRepository,
         employee_repository: EmployeeRepository,
         transaction_manager: AsyncTransactionManager,
-
     ) -> None:
         self.__department_repository = department_repository
         self.__employee_repository = employee_repository
@@ -39,78 +40,115 @@ class DeleteDepartmentCommandHandler(CommandHandler[DeleteDepartmentCommand, Non
                     type=ApplicationTypeError.VALIDATION,
                     message=error_texts.DEPARTMENT_REASSIGN_ID_REQUIRED
                 )
-            await self._reassign_delete(
-                department_id,
-                DepartmentId(command.reassign_to_department_id),
+
+            target_id = DepartmentId(
+                command.reassign_to_department_id
             )
+
+            if target_id == department_id:
+                raise ApplicationError(
+                    type=ApplicationTypeError.VALIDATION,
+                    message=error_texts.DEPARTMENT_REASSIGN_SELF_FORBIDDEN,
+                )
+
+            await self._reassign_delete(
+                department_id=department_id,
+                target_id=target_id,
+            )
+
         else:
             raise ApplicationError(
                 type=ApplicationTypeError.VALIDATION,
-                message=error_texts.DEPARTMENT_DELETE_MODE_INVALID
+                message=error_texts.DEPARTMENT_DELETE_MODE_INVALID,
             )
 
         await self.__transaction_manager.commit()
 
-    async def _cascade_delete(self, department_id: DepartmentId) -> None:
-        children = await self.__department_repository.get_children_ids(department_id)
-        for child_id in children:
-            await self._cascade_delete(child_id)
-
-        await self.__employee_repository.delete_by_department(department_id)
-        await self._delete_department(department_id)
-
-    async def _reassign_delete(
-            self,
-            department_id: DepartmentId,
-            target_id: DepartmentId,
+    async def _cascade_delete(
+        self,
+        department_id: DepartmentId,
     ) -> None:
 
-        await self._reassign_subtree_employees(
-            department_id,
-            target_id
-        )
-
-        await self._cascade_delete_departments_only(
-            department_id
-        )
-
-    async def _reassign_subtree_employees(
-            self,
-            department_id: DepartmentId,
-            target_id: DepartmentId,
-    ) -> None:
-
-        await self.__employee_repository.reassign_to_department(
-            department_id,
-            target_id
-        )
-
-        children = await self.__department_repository.get_children_ids(
-            department_id
-        )
-
-        for child_id in children:
-            await self._reassign_subtree_employees(
-                child_id,
-                target_id
+        children_ids = (
+            await self.__department_repository.get_children_ids(
+                department_id
             )
-
-    async def _cascade_delete_departments_only(
-            self,
-            department_id: DepartmentId,
-    ) -> None:
-
-        children = await self.__department_repository.get_children_ids(
-            department_id
         )
 
-        for child_id in children:
-            await self._cascade_delete_departments_only(
+        for child_id in children_ids:
+            await self._cascade_delete(
                 child_id
             )
 
-        await self._delete_department(department_id)
+        await self.__employee_repository.delete_by_department(
+            department_id
+        )
 
-    async def _delete_department(self, department_id: DepartmentId) -> None:
-        dept = await self.__department_repository.get(id=department_id)
-        await self.__department_repository.delete(dept)
+        await self._delete_department(
+            department_id
+        )
+
+    async def _reassign_delete(
+        self,
+        department_id: DepartmentId,
+        target_id: DepartmentId,
+    ) -> None:
+
+        department = await self.__department_repository.get(
+            id=department_id
+        )
+
+        is_descendant = (
+            await self.__department_repository.is_descendant(
+                ancestor_id=department_id,
+                descendant_id=target_id,
+            )
+        )
+
+        if is_descendant:
+            raise ApplicationError(
+                type=ApplicationTypeError.CONFLICT,
+                message=error_texts.DEPARTMENT_REASSIGN_TO_DESCENDANT_FORBIDDEN,
+            )
+
+        await self.__employee_repository.reassign_to_department(
+            from_id=department_id,
+            to_id=target_id,
+        )
+
+        children_ids = (
+            await self.__department_repository.get_children_ids(
+                department_id
+            )
+        )
+
+        for child_id in children_ids:
+
+            child = await self.__department_repository.get(
+                id=child_id
+            )
+
+            child.change_parent(
+                department.parent_id
+            )
+
+            await self.__department_repository.update(
+                child
+            )
+
+        await self._delete_department(
+            department_id
+        )
+
+    async def _delete_department(
+        self,
+        department_id: DepartmentId,
+    ) -> None:
+
+        department = await self.__department_repository.get(
+            id=department_id
+        )
+
+        await self.__department_repository.delete(
+            department
+        )

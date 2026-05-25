@@ -30,3 +30,7 @@ class DepartmentRepository(ABC):
     @abstractmethod
     async def exists(self, **filters: Any) -> bool:
         """Check if a department exists."""
+
+    @abstractmethod
+    async def is_descendant(self, ancestor_id: DepartmentId, descendant_id: DepartmentId) -> bool:
+        """Check whether descendant_id belongs to ancestor_id subtree."""

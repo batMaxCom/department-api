@@ -1,12 +1,17 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from department.application.common.application_error import (
+    ApplicationError,
+    ApplicationTypeError,
+)
 from department.application.common.dto import DepartmentDetailsDto, DepartmentDto, EmployeeDto
 from department.application.ports.gateways.department import DepartmentGateway
 from department.domain.department.entity import Department
 from department.domain.department.value_objects import DepartmentId
 from department.domain.employee.entity import Employee
 from department.infrastructure.persistence.tables import DEPARTMENT_TABLE, EMPLOYEE_TABLE
+from department.application.common.const import errors as error_texts
 
 
 class DepartmentGatewayImpl(DepartmentGateway):
@@ -25,6 +30,11 @@ class DepartmentGatewayImpl(DepartmentGateway):
     ) -> DepartmentDetailsDto:
 
         department = await self._load_department(department_id)
+        if department is None:
+            raise ApplicationError(
+                type=ApplicationTypeError.NOT_FOUND,
+                message=error_texts.DEPARTMENT_NOT_FOUND
+            )
 
         employees = []
         if include_employees:
@@ -79,13 +89,13 @@ class DepartmentGatewayImpl(DepartmentGateway):
     async def _load_department(
         self,
         department_id: DepartmentId,
-    ) -> Department:
+    ) -> Department | None:
         stmt = select(Department).where(
             DEPARTMENT_TABLE.c.id == department_id
         )
 
         result = await self._session.execute(stmt)
-        return result.scalar_one()
+        return result.scalar_one_or_none()
 
     async def _load_employees(
         self,

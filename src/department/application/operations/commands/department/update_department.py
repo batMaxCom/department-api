@@ -54,7 +54,7 @@ class UpdateDepartmentCommandHandler(CommandHandler[UpdateDepartmentCommand, Dep
         if department_id == parent_id:
             raise ApplicationError(
                 type=ApplicationTypeError.CONFLICT,
-                message=error_texts.DEPARTMENT_ITSELF_CONFLICT
+                message=error_texts.DEPARTMENT_REASSIGN_SELF_FORBIDDEN
             )
 
         parent = await self.__department_repository.get(
